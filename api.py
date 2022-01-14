@@ -1,10 +1,20 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Any, Dict, List, Optional
 from database.interface.sql_queries import SQLQueriesFactory
 from database.interface.sql_operations import SQLOperations
 from database.data_model.data_model import Ping
 
 app = FastAPI()
+
+# CORS authorization
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # As soon as it is quite a simple API we will use only one file
 
