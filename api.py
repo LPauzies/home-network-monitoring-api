@@ -43,27 +43,6 @@ async def get_all_pings() -> List[Dict[str, Any]]:
         entry[Ping.Columns.PACKET_LOSS] = entry[Ping.Columns.PACKET_LOSS] == 1
     return entries
 
-@app.get("/api/ping/highest")
-async def get_highest_ping() -> List[Dict[str, Any]]:
-    """Retrieve the highest ping entry for the last 24 hours.
-
-    Returns:
-        List[Dict[str, Any]]: A JSON based on SQL table data model for the needed ping
-    """
-    subquery = SQLQueriesFactory.generate_select_query(
-        table = Ping.TABLE,
-        columns = Ping.Columns.ALL,
-        projection_fields = None,
-        order_column = Ping.Columns.EVENT_TIME,
-        order_ascending = False,
-        limit = 17280
-    )
-    query = f"SELECT {Ping.Columns.EVENT_TIME}, {Ping.Columns.IP}, {Ping.Columns.DOMAIN_NAME}, MAX({Ping.Columns.RESPONSE_TIME}) as {Ping.Columns.RESPONSE_TIME} FROM ({subquery}) GROUP BY {Ping.Columns.IP}"
-    entries = SQLOperations.execute_sql_query(query, with_return = True)
-    entries = [dict(zip([Ping.Columns.EVENT_TIME, Ping.Columns.IP, Ping.Columns.DOMAIN_NAME, Ping.Columns.RESPONSE_TIME], entry)) for entry in entries]
-    entries = sort_dict_collection_by_value(entries, lambda x, y: len(x[Ping.Columns.IP]) - len(y[Ping.Columns.IP]))
-    return entries
-
 @app.get("/api/ping/packetloss")
 async def get_packetloss() -> List[Dict[str, Any]]:
     """Retrieve the highest ping entry for the last 24 hours.
