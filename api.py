@@ -38,7 +38,7 @@ async def get_all_pings() -> List[Dict[str, Any]]:
     )
     entries = SQLOperations.execute_sql_query(query, with_return = True)
     entries = [dict(zip(Ping.Columns.ALL, entry)) for entry in entries]
-    entries = sort_dict_collection_by_value(entries, lambda x, y: len(x[Ping.Columns.DOMAIN_NAME]) - len(y[Ping.Columns.DOMAIN_NAME]))
+    entries = sort_dict_collection_by_value(entries, lambda x, y: len(x[Ping.Columns.IP]) - len(y[Ping.Columns.IP]))
     for entry in entries:
         entry[Ping.Columns.PACKET_LOSS] = entry[Ping.Columns.PACKET_LOSS] == 1
     return entries
@@ -61,7 +61,7 @@ async def get_highest_ping() -> List[Dict[str, Any]]:
     query = f"SELECT {Ping.Columns.EVENT_TIME}, {Ping.Columns.IP}, {Ping.Columns.DOMAIN_NAME}, MAX({Ping.Columns.RESPONSE_TIME}) as {Ping.Columns.RESPONSE_TIME} FROM ({subquery}) GROUP BY {Ping.Columns.IP}"
     entries = SQLOperations.execute_sql_query(query, with_return = True)
     entries = [dict(zip([Ping.Columns.EVENT_TIME, Ping.Columns.IP, Ping.Columns.DOMAIN_NAME, Ping.Columns.RESPONSE_TIME], entry)) for entry in entries]
-    entries = sort_dict_collection_by_value(entries, lambda x, y: len(x[Ping.Columns.DOMAIN_NAME]) - len(y[Ping.Columns.DOMAIN_NAME]))
+    entries = sort_dict_collection_by_value(entries, lambda x, y: len(x[Ping.Columns.IP]) - len(y[Ping.Columns.IP]))
     return entries
 
 @app.get("/api/ping/packetloss")
@@ -82,5 +82,5 @@ async def get_packetloss() -> List[Dict[str, Any]]:
     query = f"SELECT {Ping.Columns.EVENT_TIME}, {Ping.Columns.IP}, {Ping.Columns.DOMAIN_NAME}, MAX({Ping.Columns.PACKET_LOSS}) as {Ping.Columns.PACKET_LOSS} FROM ({subquery}) GROUP BY {Ping.Columns.IP}"
     entries = SQLOperations.execute_sql_query(query, with_return = True)
     entries = [dict(zip([Ping.Columns.EVENT_TIME, Ping.Columns.IP, Ping.Columns.DOMAIN_NAME, Ping.Columns.PACKET_LOSS], entry)) for entry in entries]
-    entries = sort_dict_collection_by_value(entries, lambda x, y: len(x[Ping.Columns.DOMAIN_NAME]) - len(y[Ping.Columns.DOMAIN_NAME]))
+    entries = sort_dict_collection_by_value(entries, lambda x, y: len(x[Ping.Columns.IP]) - len(y[Ping.Columns.IP]))
     return entries
