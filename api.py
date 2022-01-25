@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from database.interface.sql_queries import SQLQueriesFactory
 from database.interface.sql_operations import SQLOperations
 from database.data_model.data_model import Ping
-from utils.utils import sort_dict_collection_by_value
+from utils.utils import sort_dict_collection_by_value, string_comparator
 
 app = FastAPI()
 
@@ -38,14 +38,14 @@ async def get_all_pings() -> List[Dict[str, Any]]:
     )
     entries = SQLOperations.execute_sql_query(query, with_return = True)
     entries = [dict(zip(Ping.Columns.ALL, entry)) for entry in entries]
-    entries = sort_dict_collection_by_value(entries, lambda x, y: len(x[Ping.Columns.IP]) - len(y[Ping.Columns.IP]))
+    entries = sort_dict_collection_by_value(entries, lambda x, y: string_comparator(x[Ping.Columns.DOMAIN_NAME], y[Ping.Columns.DOMAIN_NAME]))
     for entry in entries:
         entry[Ping.Columns.PACKET_LOSS] = entry[Ping.Columns.PACKET_LOSS] == 1
     return entries
 
 @app.get("/api/ping/packetloss")
 async def get_packetloss() -> List[Dict[str, Any]]:
-    """Retrieve the highest ping entry for the last 24 hours.
+    """Retrieve the sum of packetloss for every IP in the system.
 
     Returns:
         List[Dict[str, Any]]: A JSON based on SQL table data model for the needed ping
@@ -58,8 +58,9 @@ async def get_packetloss() -> List[Dict[str, Any]]:
         order_ascending = False,
         limit = 17280
     )
-    query = f"SELECT {Ping.Columns.EVENT_TIME}, {Ping.Columns.IP}, {Ping.Columns.DOMAIN_NAME}, MAX({Ping.Columns.PACKET_LOSS}) as {Ping.Columns.PACKET_LOSS} FROM ({subquery}) GROUP BY {Ping.Columns.IP}"
+    query = f"SELECT {Ping.Columns.EVENT_TIME}, {Ping.Columns.IP}, {Ping.Columns.DOMAIN_NAME}, SUM({Ping.Columns.PACKET_LOSS}) as {Ping.Columns.PACKET_LOSS} FROM ({subquery}) GROUP BY {Ping.Columns.IP}"
     entries = SQLOperations.execute_sql_query(query, with_return = True)
     entries = [dict(zip([Ping.Columns.EVENT_TIME, Ping.Columns.IP, Ping.Columns.DOMAIN_NAME, Ping.Columns.PACKET_LOSS], entry)) for entry in entries]
-    entries = sort_dict_collection_by_value(entries, lambda x, y: len(x[Ping.Columns.IP]) - len(y[Ping.Columns.IP]))
+    entries = sort_dict_collection_by_value(entries, lambda x, y: string_comparator(x[Ping.Columns.DOMAIN_NAME], y[Ping.Columns.DOMAIN_NAME]))
+    print(entries)
     return entries
